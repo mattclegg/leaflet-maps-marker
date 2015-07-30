@@ -588,14 +588,22 @@ class Leafletmapsmarker
 		$plugin_version = get_option('leafletmapsmarker_version');
 		if ( is_admin() ) { $gmaps_libraries = '&libraries=places'; } else { $gmaps_libraries =  ''; }
 		//info: Google language localization (JSON API)
-		if ($lmm_options['google_maps_language_localization'] == 'browser_setting') {
-			$google_language = '';
-		} else if ($lmm_options['google_maps_language_localization'] == 'wordpress_setting') {
-			if ( $locale != NULL ) { $google_language = "&language=" . substr($locale, 0, 2); } else { $google_language =  '&language=en'; }
+		if (isset($lmm_options['google_maps_language_localization'])) {
+			if ($lmm_options['google_maps_language_localization'] == 'browser_setting') {
+				$google_language = '';
+			} else if ($lmm_options['google_maps_language_localization'] == 'wordpress_setting') {
+				if ($locale != NULL) {
+					$google_language = "&language=" . substr($locale, 0, 2);
+				} else {
+					$google_language = '&language=en';
+				}
+			} else {
+				$google_language = "&language=" . $lmm_options['google_maps_language_localization'];
+			}
 		} else {
-			$google_language = "&language=" . $lmm_options['google_maps_language_localization'];
+			$google_language = '';
 		}
-		if ($lmm_options['google_maps_base_domain_custom'] == '') {
+		if (isset($lmm_options['google_maps_base_domain_custom']) && $lmm_options['google_maps_base_domain_custom'] == '') {
 			$gmaps_base_domain = "&base_domain=" . $lmm_options['google_maps_base_domain'];
 		} else {
 			$gmaps_base_domain = "&base_domain=" . $lmm_options['google_maps_base_domain_custom'];
@@ -604,21 +612,26 @@ class Leafletmapsmarker
 		if ( isset($lmm_options['google_maps_api_key']) && ($lmm_options['google_maps_api_key'] != NULL) ) { $google_maps_api_key = $lmm_options['google_maps_api_key']; } else { $google_maps_api_key = ''; }
 		$protocol_handler = (is_ssl() == TRUE) ? 'https' : 'http'; //info: conditional ssl loading for Google js (performance issues in China)
 		//info: fallback for adding js to footer 1
-		if ($lmm_options['misc_javascript_header_footer'] == 'footer') {
+		if (isset($lmm_options['misc_javascript_header_footer']) && $lmm_options['misc_javascript_header_footer'] == 'footer') {
 			wp_register_script( 'leafletmapsmarker-googlemaps-loader', $protocol_handler . '://www.google.com/jsapi?key='.$google_maps_api_key, array(), 3.7, true);
 		} else {
 			wp_enqueue_script( array ( 'jquery' ) );
 			wp_enqueue_script( 'leafletmapsmarker-googlemaps-loader', $protocol_handler . '://www.google.com/jsapi?key='.$google_maps_api_key, array(), NULL);
 		}
 		//info: Bing culture code
-		if ($lmm_options['bingmaps_culture'] == 'automatic') {
-			if ( $locale != NULL ) { $bing_culture = str_replace("_","-", $locale); } else { $bing_culture =  'en_us'; }
+		if(isset($lmm_options['bingmaps_culture'])) {
+			if ($lmm_options['bingmaps_culture'] == 'automatic') {
+				if ( $locale != NULL ) { $bing_culture = str_replace("_","-", $locale); } else { $bing_culture =  'en_us'; }
+			} else {
+				$bing_culture = $lmm_options['bingmaps_culture'];
+			}
 		} else {
-			$bing_culture = $lmm_options['bingmaps_culture'];
+			$bing_culture = '';
 		}
+
 		//info: load leaflet.js + plugins
 		//info: fallback for adding js to footer 2
-		if ($lmm_options['misc_javascript_header_footer'] == 'footer') {
+		if (isset($lmm_options['misc_javascript_header_footer']) && $lmm_options['misc_javascript_header_footer'] == 'footer') {
 			wp_register_script( 'leafletmapsmarker', LEAFLET_PLUGIN_URL . 'leaflet-dist/leaflet.js', array('leafletmapsmarker-googlemaps-loader', 'jquery' ), $plugin_version, true);
 			wp_register_script( 'show_map', LEAFLET_PLUGIN_URL . 'inc/js/show_map.js', array('leafletmapsmarker' ), $plugin_version, true);
 		} else {
@@ -708,8 +721,10 @@ class Leafletmapsmarker
 						}
 					}
 					//info: override max image width in popups
-					$lmm_custom_css = ".leaflet-popup-content img { " . htmlspecialchars($lmm_options['defaults_marker_popups_image_css']) . " }";
-						wp_add_inline_style($css_enqueue_handle,$lmm_custom_css);
+					if(isset($lmm_options['defaults_marker_popups_image_css'])) {
+						$lmm_custom_css = ".leaflet-popup-content img { " . htmlspecialchars($lmm_options['defaults_marker_popups_image_css']) . " }";
+						wp_add_inline_style($css_enqueue_handle, $lmm_custom_css);
+					}
 				}
 		} else {
 				global $wp_styles;
@@ -720,8 +735,10 @@ class Leafletmapsmarker
 				wp_enqueue_style('leafletmapsmarker-ie-only');
 				$wp_styles->add_data('leafletmapsmarker-ie-only', 'conditional', 'lt IE 9');
 				//info: override max image width in popups
-				$lmm_custom_css = ".leaflet-popup-content img { " . htmlspecialchars($lmm_options['defaults_marker_popups_image_css']) . " }";
+				if(isset($lmm_options['defaults_marker_popups_image_css'])) {
+					$lmm_custom_css = ".leaflet-popup-content img { " . htmlspecialchars($lmm_options['defaults_marker_popups_image_css']) . " }";
 					wp_add_inline_style($css_enqueue_handle,$lmm_custom_css);
+				}
 		}
 	}
 	function lmm_template_check_shortcode( $template ) {
